@@ -8,7 +8,7 @@ if (!defined('ABSPATH')) {
 
 final class VGCB_Sender_Order_Handler
 {
-    public function __construct(private readonly VGCB_Sender_Outbox $outbox)
+    public function __construct(private readonly VGCB_Sender_Outbox_Store $outbox)
     {
     }
 
@@ -81,7 +81,7 @@ final class VGCB_Sender_Order_Handler
             $seen_entitlements[$dedupe_key] = true;
 
             $payload = $this->build_payload($order, $item, $product, $mapping, 'grant_access', $trigger);
-            $outbox_id = $this->outbox->insert_payload($payload, VGCB_Sender_Outbox::DIRECTION_GRANT);
+            $outbox_id = $this->outbox->insert_payload($payload, VGCB_Sender_Outbox_Store::DIRECTION_GRANT);
 
             if ($outbox_id > 0) {
                 $created_ids[] = $outbox_id;
@@ -118,7 +118,7 @@ final class VGCB_Sender_Order_Handler
                 'total_refunded' => (string) $order->get_total_refunded(),
             ];
 
-            $outbox_id = $this->outbox->insert_payload($payload, VGCB_Sender_Outbox::DIRECTION_REVOKE);
+            $outbox_id = $this->outbox->insert_payload($payload, VGCB_Sender_Outbox_Store::DIRECTION_REVOKE);
             if ($outbox_id > 0) {
                 $this->outbox->schedule_job($outbox_id);
             }

@@ -7,7 +7,7 @@ namespace VGBridgeTests\Unit;
 use Brain\Monkey\Functions;
 use Mockery;
 use VGCB_Sender_Order_Handler;
-use VGCB_Sender_Outbox;
+use VGCB_Sender_Outbox_Store;
 use VGBridgeTests\Support\TestCase;
 
 final class SenderPayloadBuildTest extends TestCase
@@ -43,7 +43,7 @@ final class SenderPayloadBuildTest extends TestCase
 
         Functions\expect('wc_get_order')->once()->with(123456)->andReturn($order);
 
-        $outbox = Mockery::mock(VGCB_Sender_Outbox::class);
+        $outbox = Mockery::mock(VGCB_Sender_Outbox_Store::class);
         $outbox->shouldReceive('insert_payload')
             ->once()
             ->andReturnUsing(function (array $payload, string $direction): int {

@@ -22,6 +22,7 @@ define('VGCB_SENDER_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('VGCB_SENDER_PLUGIN_URL', plugin_dir_url(__FILE__));
 
 require_once VGCB_SENDER_PLUGIN_DIR . 'includes/class-vgcb-sender-activator.php';
+require_once VGCB_SENDER_PLUGIN_DIR . 'includes/interface-vgcb-sender-outbox-store.php';
 require_once VGCB_SENDER_PLUGIN_DIR . 'includes/class-vgcb-sender-outbox.php';
 require_once VGCB_SENDER_PLUGIN_DIR . 'includes/class-vgcb-sender-http.php';
 require_once VGCB_SENDER_PLUGIN_DIR . 'includes/class-vgcb-sender-order-handler.php';

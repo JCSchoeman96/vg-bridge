@@ -6,7 +6,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-final class VGCB_Sender_Outbox
+final class VGCB_Sender_Outbox implements VGCB_Sender_Outbox_Store
 {
     public const STATUS_PENDING = 'pending';
     public const STATUS_SENT = 'sent';
@@ -14,9 +14,6 @@ final class VGCB_Sender_Outbox
     public const STATUS_SKIPPED = 'skipped';
     public const STATUS_REVOKED = 'revoked';
     public const STATUS_REVOKE_FAILED = 'revoke_failed';
-
-    public const DIRECTION_GRANT = 'grant';
-    public const DIRECTION_REVOKE = 'revoke';
 
     public function table(): string
     {

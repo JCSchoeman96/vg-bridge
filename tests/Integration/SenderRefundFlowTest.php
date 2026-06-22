@@ -8,6 +8,7 @@ use Brain\Monkey\Functions;
 use Mockery;
 use VGCB_Sender_Order_Handler;
 use VGCB_Sender_Outbox;
+use VGCB_Sender_Outbox_Store;
 use VGBridgeTests\Support\TestCase;
 
 final class SenderRefundFlowTest extends TestCase
@@ -30,11 +31,13 @@ final class SenderRefundFlowTest extends TestCase
 
     public function test_partial_refund_does_not_create_revoke(): void
     {
+        $this->expectNotToPerformAssertions();
+
         $order = new \WC_Order(200, true, [], 100.00, 50.00);
 
         Functions\expect('wc_get_order')->once()->with(200)->andReturn($order);
 
-        $outbox = Mockery::mock(VGCB_Sender_Outbox::class);
+        $outbox = Mockery::mock(VGCB_Sender_Outbox_Store::class);
         $outbox->shouldNotReceive('insert_payload');
         $outbox->shouldNotReceive('mark_skipped_pending_for_order');
 
@@ -55,7 +58,7 @@ final class SenderRefundFlowTest extends TestCase
             'status' => VGCB_Sender_Outbox::STATUS_SENT,
         ];
 
-        $outbox = Mockery::mock(VGCB_Sender_Outbox::class);
+        $outbox = Mockery::mock(VGCB_Sender_Outbox_Store::class);
         $outbox->shouldReceive('mark_skipped_pending_for_order')->once()->with(201, Mockery::type('string'));
         $outbox->shouldReceive('get_grants_for_order')->once()->with(201)->andReturn([$sentGrant]);
         $outbox->shouldReceive('insert_payload')
@@ -66,7 +69,7 @@ final class SenderRefundFlowTest extends TestCase
                 return $payload['event'] === 'revoke_access'
                     && isset($payload['refund']['full_refund'])
                     && $payload['refund']['full_refund'] === true;
-            }), VGCB_Sender_Outbox::DIRECTION_REVOKE)
+            }), VGCB_Sender_Outbox_Store::DIRECTION_REVOKE)
             ->andReturn(2);
         $outbox->shouldReceive('schedule_job')->once()->with(2);
 
@@ -78,11 +81,13 @@ final class SenderRefundFlowTest extends TestCase
 
     public function test_full_refund_before_grant_marks_pending_grants_as_skipped(): void
     {
+        $this->expectNotToPerformAssertions();
+
         $order = new \WC_Order(202, true, [], 100.00, 100.00);
 
         Functions\expect('wc_get_order')->once()->with(202)->andReturn($order);
 
-        $outbox = Mockery::mock(VGCB_Sender_Outbox::class);
+        $outbox = Mockery::mock(VGCB_Sender_Outbox_Store::class);
         $outbox->shouldReceive('mark_skipped_pending_for_order')->once()->with(202, Mockery::type('string'));
         $outbox->shouldReceive('get_grants_for_order')->once()->with(202)->andReturn([]);
         $outbox->shouldNotReceive('insert_payload');

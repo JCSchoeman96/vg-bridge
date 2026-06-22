@@ -259,6 +259,7 @@ if (!class_exists('WP_User')) {
 
 require_once VGCB_RECEIVER_PLUGIN_DIR . 'includes/class-vgcb-receiver-activator.php';
 require_once VGCB_SENDER_PLUGIN_DIR . 'includes/class-vgcb-sender-activator.php';
+require_once VGCB_SENDER_PLUGIN_DIR . 'includes/interface-vgcb-sender-outbox-store.php';
 require_once VGCB_SENDER_PLUGIN_DIR . 'includes/class-vgcb-sender-outbox.php';
 require_once VGCB_SENDER_PLUGIN_DIR . 'includes/class-vgcb-sender-http.php';
 require_once VGCB_SENDER_PLUGIN_DIR . 'includes/class-vgcb-sender-order-handler.php';

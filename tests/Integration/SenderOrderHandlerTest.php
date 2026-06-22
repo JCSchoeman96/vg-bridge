@@ -7,7 +7,7 @@ namespace VGBridgeTests\Integration;
 use Brain\Monkey\Functions;
 use Mockery;
 use VGCB_Sender_Order_Handler;
-use VGCB_Sender_Outbox;
+use VGCB_Sender_Outbox_Store;
 use VGBridgeTests\Support\TestCase;
 
 final class SenderOrderHandlerTest extends TestCase
@@ -30,13 +30,15 @@ final class SenderOrderHandlerTest extends TestCase
 
     public function test_unpaid_order_creates_no_outbox_job(): void
     {
+        $this->expectNotToPerformAssertions();
+
         $product = new \WC_Product(11111);
         $item = new \WC_Order_Item_Product(1, $product);
         $order = new \WC_Order(100, false, [$item]);
 
         Functions\expect('wc_get_order')->once()->with(100)->andReturn($order);
 
-        $outbox = Mockery::mock(VGCB_Sender_Outbox::class);
+        $outbox = Mockery::mock(VGCB_Sender_Outbox_Store::class);
         $outbox->shouldNotReceive('insert_payload');
 
         (new VGCB_Sender_Order_Handler($outbox))->handle_payment_complete(100);
@@ -44,13 +46,15 @@ final class SenderOrderHandlerTest extends TestCase
 
     public function test_paid_order_with_no_mapped_product_creates_no_outbox_job(): void
     {
+        $this->expectNotToPerformAssertions();
+
         $product = new \WC_Product(11111);
         $item = new \WC_Order_Item_Product(1, $product);
         $order = new \WC_Order(101, true, [$item]);
 
         Functions\expect('wc_get_order')->once()->with(101)->andReturn($order);
 
-        $outbox = Mockery::mock(VGCB_Sender_Outbox::class);
+        $outbox = Mockery::mock(VGCB_Sender_Outbox_Store::class);
         $outbox->shouldNotReceive('insert_payload');
 
         (new VGCB_Sender_Order_Handler($outbox))->handle_payment_complete(101);
@@ -128,9 +132,9 @@ final class SenderOrderHandlerTest extends TestCase
         return new \WC_Order($orderId, true, [$item]);
     }
 
-    private function spyOutbox(int $expectedSchedules = 1): VGCB_Sender_Outbox
+    private function spyOutbox(int $expectedSchedules = 1): VGCB_Sender_Outbox_Store
     {
-        $outbox = Mockery::mock(VGCB_Sender_Outbox::class);
+        $outbox = Mockery::mock(VGCB_Sender_Outbox_Store::class);
         $outbox->shouldReceive('insert_payload')
             ->andReturnUsing(function (array $payload, string $direction): int {
                 $this->capturedInserts[] = ['payload' => $payload, 'direction' => $direction];

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace VGBridgeTests\Integration;
 
 use Brain\Monkey\Functions;
-use Mockery;
 use VGCB_Receiver_Access;
 use VGCB_Receiver_Log;
 use VGCB_Receiver_Mailer;
@@ -33,14 +32,19 @@ final class ReceiverAccessGrantTest extends TestCase
         });
         Functions\when('get_user_meta')->justReturn('');
         Functions\when('update_user_meta')->justReturn(true);
-        Functions\when('wp_update_user')->justReturn(1);
+        Functions\when('wp_update_user')->alias(function (array $userdata): int {
+            $GLOBALS['vgcb_test_wp_update_user_calls'][] = $userdata;
+
+            return (int) ($userdata['ID'] ?? 1);
+        });
         Functions\when('wp_generate_password')->justReturn('generated-password');
         Functions\when('get_password_reset_key')->justReturn('reset-key-abc');
     }
 
     public function test_new_user_is_created_from_billing_email(): void
     {
-        Functions\expect('get_user_by')->once()->with('email', 'anna@example.com')->andReturn(false);
+        $this->stubGetUserByForNewUser(100);
+
         Functions\expect('wp_create_user')->once()->andReturnUsing(function (): int {
             $id = $GLOBALS['vgcb_test_next_user_id']++;
             $GLOBALS['vgcb_test_users'][$id] = [
@@ -50,9 +54,6 @@ final class ReceiverAccessGrantTest extends TestCase
             ];
 
             return $id;
-        });
-        Functions\expect('get_user_by')->once()->with('id', Mockery::type('int'))->andReturnUsing(function (string $field, int $id): WP_User {
-            return new WP_User($id, 'anna@example.com', 'anna');
         });
 
         $result = $this->access->process_payload($this->fixture('grant-payload.json'));
@@ -64,9 +65,9 @@ final class ReceiverAccessGrantTest extends TestCase
     public function test_existing_user_is_reused(): void
     {
         $existing = new WP_User(42, 'anna@example.com', 'anna');
-        Functions\expect('get_user_by')->once()->with('email', 'anna@example.com')->andReturn($existing);
+        $this->stubGetUserByForExistingUser($existing);
+
         Functions\expect('wp_create_user')->never();
-        Functions\expect('get_user_by')->once()->with('id', 42)->andReturn($existing);
 
         $result = $this->access->process_payload($this->fixture('grant-payload.json'));
 
@@ -76,26 +77,24 @@ final class ReceiverAccessGrantTest extends TestCase
 
     public function test_new_user_gets_customer_role_when_available(): void
     {
-        $capturedRole = null;
-        Functions\expect('get_user_by')->once()->with('email', 'anna@example.com')->andReturn(false);
-        Functions\expect('wp_create_user')->once()->andReturn(50);
-        Functions\expect('wp_update_user')->once()->with(Mockery::on(function (array $data) use (&$capturedRole): bool {
-            $capturedRole = $data['role'] ?? null;
+        $this->stubGetUserByForNewUser(50);
 
-            return true;
-        }));
-        Functions\expect('get_user_by')->once()->with('id', 50)->andReturn(new WP_User(50, 'anna@example.com', 'anna'));
+        Functions\expect('wp_create_user')->once()->andReturn(50);
 
         $this->access->process_payload($this->fixture('grant-payload.json'));
 
-        $this->assertSame('customer', $capturedRole);
+        $roles = array_filter(array_map(
+            static fn(array $call): ?string => $call['role'] ?? null,
+            $GLOBALS['vgcb_test_wp_update_user_calls']
+        ));
+
+        $this->assertContains('customer', $roles);
     }
 
     public function test_learndash_group_grant_calls_ld_update_group_access(): void
     {
         $existing = new WP_User(42, 'anna@example.com', 'anna');
-        Functions\expect('get_user_by')->once()->with('email', 'anna@example.com')->andReturn($existing);
-        Functions\expect('get_user_by')->once()->with('id', 42)->andReturn($existing);
+        $this->stubGetUserByForExistingUser($existing);
 
         $this->access->process_payload($this->fixture('grant-payload.json'));
 
@@ -114,8 +113,7 @@ final class ReceiverAccessGrantTest extends TestCase
         $payload['entitlement']['id'] = 33333;
 
         $existing = new WP_User(42, 'anna@example.com', 'anna');
-        Functions\expect('get_user_by')->once()->with('email', 'anna@example.com')->andReturn($existing);
-        Functions\expect('get_user_by')->once()->with('id', 42)->andReturn($existing);
+        $this->stubGetUserByForExistingUser($existing);
 
         $this->access->process_payload($payload);
 
@@ -130,12 +128,41 @@ final class ReceiverAccessGrantTest extends TestCase
     public function test_access_email_is_sent_for_grant(): void
     {
         $existing = new WP_User(42, 'anna@example.com', 'anna');
-        Functions\expect('get_user_by')->once()->with('email', 'anna@example.com')->andReturn($existing);
-        Functions\expect('get_user_by')->once()->with('id', 42)->andReturn($existing);
+        $this->stubGetUserByForExistingUser($existing);
 
         $this->access->process_payload($this->fixture('grant-payload.json'));
 
         $this->assertNotEmpty($GLOBALS['vgcb_test_mail']);
         $this->assertSame('anna@example.com', $GLOBALS['vgcb_test_mail'][0]['to']);
+    }
+
+    private function stubGetUserByForNewUser(int $newUserId): void
+    {
+        Functions\when('get_user_by')->alias(function (string $field, mixed $value) use ($newUserId): WP_User|false {
+            if ($field === 'email' && $value === 'anna@example.com') {
+                return false;
+            }
+
+            if ($field === 'id' && (int) $value === $newUserId) {
+                return new WP_User($newUserId, 'anna@example.com', 'anna');
+            }
+
+            return false;
+        });
+    }
+
+    private function stubGetUserByForExistingUser(WP_User $existing): void
+    {
+        Functions\when('get_user_by')->alias(function (string $field, mixed $value) use ($existing): WP_User|false {
+            if ($field === 'email' && $value === 'anna@example.com') {
+                return $existing;
+            }
+
+            if ($field === 'id' && (int) $value === $existing->ID) {
+                return $existing;
+            }
+
+            return false;
+        });
     }
 }

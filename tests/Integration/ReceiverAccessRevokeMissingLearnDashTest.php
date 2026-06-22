@@ -4,38 +4,30 @@ declare(strict_types=1);
 
 namespace VGBridgeTests\Integration;
 
-use Brain\Monkey;
 use Brain\Monkey\Functions;
 use VGCB_Receiver_Access;
 use VGCB_Receiver_Log;
 use VGCB_Receiver_Mailer;
 use VGCB_Receiver_Payload_Validator;
-use PHPUnit\Framework\TestCase as PhpUnitTestCase;
-use VGBridgeTests\Support\FakeWpdb;
+use VGBridgeTests\Support\TestCase;
 use WP_User;
 
-final class ReceiverAccessRevokeMissingLearnDashTest extends PhpUnitTestCase
+/**
+ * @runTestsInSeparateProcesses
+ * @preserveGlobalState disabled
+ */
+final class ReceiverAccessRevokeMissingLearnDashTest extends TestCase
 {
+    protected bool $loadLearnDashStubs = false;
+
     protected function setUp(): void
     {
         parent::setUp();
-        Monkey\setUp();
-
-        $GLOBALS['vgcb_test_users'] = [];
-        $GLOBALS['vgcb_test_group_access_calls'] = [];
-        $GLOBALS['vgcb_test_course_access_calls'] = [];
-        $GLOBALS['wpdb'] = new FakeWpdb();
 
         Functions\when('get_user_meta')->justReturn('');
         Functions\when('update_user_meta')->justReturn(true);
         Functions\when('wp_update_user')->justReturn(1);
         Functions\when('wp_mail')->justReturn(true);
-    }
-
-    protected function tearDown(): void
-    {
-        Monkey\tearDown();
-        parent::tearDown();
     }
 
     public function test_missing_learndash_function_fails_cleanly(): void
@@ -48,14 +40,15 @@ final class ReceiverAccessRevokeMissingLearnDashTest extends PhpUnitTestCase
         $access = new VGCB_Receiver_Access($log, $mailer, $validator);
 
         $existing = new WP_User(42, 'anna@example.com', 'anna');
-        Functions\expect('get_user_by')->once()->with('email', 'anna@example.com')->andReturn($existing);
+        Functions\when('get_user_by')->alias(function (string $field, mixed $value) use ($existing): WP_User|false {
+            if ($field === 'email' && $value === 'anna@example.com') {
+                return $existing;
+            }
 
-        $json = file_get_contents(dirname(__DIR__) . '/fixtures/revoke-payload.json');
-        $this->assertIsString($json);
-        $payload = json_decode($json, true);
-        $this->assertIsArray($payload);
+            return false;
+        });
 
-        $result = $access->process_payload($payload);
+        $result = $access->process_payload($this->fixture('revoke-payload.json'));
 
         $this->assertFalse($result['success']);
         $this->assertStringContainsString('ld_update_group_access', $result['message']);

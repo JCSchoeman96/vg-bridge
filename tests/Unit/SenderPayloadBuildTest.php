@@ -26,7 +26,6 @@ final class SenderPayloadBuildTest extends TestCase
 
             return $meta[$key] ?? '';
         });
-        Functions\when('is_a')->alias(static fn($object, string $class): bool => $object instanceof $class);
     }
 
     public function test_payload_includes_required_fields(): void

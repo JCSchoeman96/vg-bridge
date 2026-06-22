@@ -30,13 +30,21 @@ final class SenderPackagingGuardTest extends TestCase
         $this->assertFileExists($senderZip);
         $this->assertFileExists($receiverZip);
 
-        foreach ([$senderZip, $receiverZip] as $zipFile) {
-            $listing = shell_exec('unzip -l ' . escapeshellarg($zipFile));
-            $this->assertIsString($listing);
+        $forbidden = ['.git/', 'docs/', 'tests/', 'releases/', 'wp-config.php', '.env', 'vendor/', 'node_modules/'];
 
-            $forbidden = ['.git/', 'docs/', 'tests/', 'releases/', 'wp-config.php', '.env', 'vendor/', 'node_modules/'];
-            foreach ($forbidden as $needle) {
-                $this->assertStringNotContainsString($needle, $listing, "Forbidden path found in {$zipFile}: {$needle}");
+        foreach ([$senderZip, $receiverZip] as $zipFile) {
+            exec('unzip -Z1 ' . escapeshellarg($zipFile), $entries, $exitCode);
+            $this->assertSame(0, $exitCode, "Could not list entries in {$zipFile}");
+            $this->assertNotEmpty($entries);
+
+            foreach ($entries as $entry) {
+                foreach ($forbidden as $needle) {
+                    $this->assertStringNotContainsString(
+                        $needle,
+                        $entry,
+                        "Forbidden path found in {$zipFile} entry: {$entry}"
+                    );
+                }
             }
         }
 

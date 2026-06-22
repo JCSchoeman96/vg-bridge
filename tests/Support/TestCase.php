@@ -10,6 +10,8 @@ use PHPUnit\Framework\TestCase as PhpUnitTestCase;
 
 abstract class TestCase extends PhpUnitTestCase
 {
+    protected bool $loadLearnDashStubs = true;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -21,6 +23,7 @@ abstract class TestCase extends PhpUnitTestCase
         $GLOBALS['vgcb_test_course_access_calls'] = [];
         $GLOBALS['vgcb_test_mail'] = [];
         $GLOBALS['vgcb_test_order_notes'] = [];
+        $GLOBALS['vgcb_test_wp_update_user_calls'] = [];
         $GLOBALS['vgcb_test_options'] = [
             'admin_email' => 'online@carpediem.co.za',
         ];
@@ -32,7 +35,9 @@ abstract class TestCase extends PhpUnitTestCase
         $GLOBALS['vgcb_test_next_user_id'] = 100;
         $GLOBALS['wpdb'] = new FakeWpdb();
 
-        require_once dirname(__DIR__) . '/Support/LearnDashStubs.php';
+        if ($this->loadLearnDashStubs) {
+            require_once dirname(__DIR__) . '/Support/LearnDashStubs.php';
+        }
     }
 
     protected function tearDown(): void

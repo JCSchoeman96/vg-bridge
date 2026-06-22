@@ -56,7 +56,10 @@ final class ReceiverPayloadValidationTest extends TestCase
 
     public function test_invalid_email_is_rejected(): void
     {
-        $result = $this->validator->validate($this->fixture('invalid-payload.json'));
+        $payload = $this->fixture('grant-payload.json');
+        $payload['customer']['email'] = 'not-an-email';
+
+        $result = $this->validator->validate($payload);
 
         $this->assertInstanceOf(WP_Error::class, $result);
         $this->assertSame('vgcb_bad_email', $result->get_error_code());

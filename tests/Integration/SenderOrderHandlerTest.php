@@ -26,7 +26,6 @@ final class SenderOrderHandlerTest extends TestCase
 
             return $meta[$key] ?? '';
         });
-        Functions\when('is_a')->alias(static fn($object, string $class): bool => $object instanceof $class);
     }
 
     public function test_unpaid_order_creates_no_outbox_job(): void

@@ -26,7 +26,6 @@ final class SenderRefundFlowTest extends TestCase
 
             return $meta[$key] ?? '';
         });
-        Functions\when('is_a')->alias(static fn($object, string $class): bool => $object instanceof $class);
     }
 
     public function test_partial_refund_does_not_create_revoke(): void

@@ -105,9 +105,9 @@ if (!function_exists('esc_url_raw')) {
 if (!function_exists('get_role')) {
     function get_role(string $role): ?object
     {
-        $roles = $GLOBALS['vgcb_test_roles'] ?? ['customer' => true, 'subscriber' => true];
-
-        return isset($roles[$role]) ? (object) ['name' => $role] : null;
+        return !empty($GLOBALS['vgcb_test_roles'][$role])
+            ? (object) ['name' => $role]
+            : null;
     }
 }
 

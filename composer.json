@@ -2,6 +2,7 @@
   "name": "voelgoed/vg-bridge",
   "description": "Local test harness for the Voelgoed Course Bridge sender and receiver WordPress plugins.",
   "type": "project",
+  "license": "proprietary",
   "require-dev": {
     "phpunit/phpunit": "^10.5",
     "brain/monkey": "^2.6",

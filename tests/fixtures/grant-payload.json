@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "event": "grant_access",
+  "trigger": "woocommerce_payment_complete",
+  "source_site": "winkel.voelgoed.co.za",
+  "source_order_id": 123456,
+  "source_order_number": "123456",
+  "source_order_item_id": 78910,
+  "source_product_id": 11111,
+  "source_product_name": "Physical Product + 21-Day Course Bundle",
+  "customer": {
+    "email": "anna@example.com",
+    "first_name": "Anna",
+    "last_name": "Botha",
+    "phone": "0820000000"
+  },
+  "entitlement": {
+    "type": "learndash_group",
+    "id": 22222,
+    "label": "21-Day Course"
+  },
+  "payment": {
+    "gateway": "paystack",
+    "gateway_title": "Paystack",
+    "order_status": "processing",
+    "paid": true
+  },
+  "occurred_at_gmt": "2026-06-22 10:00:00"
+}

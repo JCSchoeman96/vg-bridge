@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - "test/**"
+      - "feature/**"
+      - "fix/**"
+      - "chore/**"
+
+jobs:
+  test:
+    name: PHP ${{ matrix.php-version }} - lint, tests, build
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version:
+          - "8.2"
+          - "8.3"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          extensions: mbstring, xml, zip, curl, intl
+          tools: composer:v2
+          coverage: none
+
+      - name: Validate Composer config
+        run: composer validate --strict
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Make scripts executable
+        run: chmod +x tools/*.sh
+
+      - name: Run PHP syntax lint
+        run: bash tools/lint-php.sh
+
+      - name: Run PHPUnit tests
+        run: composer test
+
+      - name: Build plugin ZIPs
+        run: bash tools/build-zips.sh
+
+      - name: Check plugin ZIPs
+        run: bash tools/check-zips.sh
+
+      - name: Upload plugin ZIP artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: plugin-zips-php-${{ matrix.php-version }}
+          path: releases/*.zip

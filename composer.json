@@ -1,0 +1,32 @@
+{
+  "name": "voelgoed/vg-bridge",
+  "description": "Local test harness for the Voelgoed Course Bridge sender and receiver WordPress plugins.",
+  "type": "project",
+  "license": "proprietary",
+  "require-dev": {
+    "phpunit/phpunit": "^10.5",
+    "brain/monkey": "^2.6",
+    "mockery/mockery": "^1.6"
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "VGBridgeTests\\": "tests/"
+    }
+  },
+  "scripts": {
+    "test": "phpunit",
+    "lint": "bash tools/lint-php.sh",
+    "build": "bash tools/build-zips.sh",
+    "check-zips": "bash tools/check-zips.sh",
+    "all": [
+      "@lint",
+      "@test",
+      "@build",
+      "@check-zips"
+    ]
+  },
+  "config": {
+    "sort-packages": true,
+    "allow-plugins": {}
+  }
+}

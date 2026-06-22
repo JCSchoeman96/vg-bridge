@@ -25,9 +25,11 @@ final class VGCB_Receiver
 
         $log = new VGCB_Receiver_Log();
         $mailer = new VGCB_Receiver_Mailer();
-        $access = new VGCB_Receiver_Access($log, $mailer);
+        $validator = new VGCB_Receiver_Payload_Validator();
+        $access = new VGCB_Receiver_Access($log, $mailer, $validator);
+        $authenticator = new VGCB_Receiver_Authenticator($log);
 
-        (new VGCB_Receiver_Rest($log, $access))->hooks();
+        (new VGCB_Receiver_Rest($authenticator, $access))->hooks();
         (new VGCB_Receiver_Admin($log))->hooks();
     }
 }

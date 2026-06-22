@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "event": "grant_access",
+  "trigger": "woocommerce_payment_complete",
+  "source_site": "winkel.voelgoed.co.za",
+  "source_order_id": 123456,
+  "customer": {
+    "email": "attacker@example.com"
+  },
+  "entitlement": {
+    "type": "learndash_group",
+    "id": 99999,
+    "label": "Tampered Access"
+  }
+}

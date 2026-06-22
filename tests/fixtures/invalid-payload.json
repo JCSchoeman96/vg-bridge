@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "event": "grant_access",
+  "source_site": "winkel.voelgoed.co.za",
+  "source_order_id": 0,
+  "customer": {
+    "email": "not-an-email"
+  },
+  "entitlement": {
+    "type": "bad_type",
+    "id": 0
+  }
+}
